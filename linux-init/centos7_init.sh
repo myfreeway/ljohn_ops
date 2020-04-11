@@ -45,7 +45,8 @@ yum_config(){
     wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo
     wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo
     yum clean all && yum makecache
-    yum -y install iotop iftop net-tools lrzsz gcc gcc-c++ make cmake libxml2-devel openssl-devel curl curl-devel unzip sudo ntp libaio-devel wget vim ncurses-devel autoconf automake zlib-devel  python-devel bash-completion
+    yum -y install iotop iftop net-tools lrzsz gcc gcc-c++ make cmake libxml2-devel openssl-devel curl curl-devel unzip sudo ntp libaio-devel wget vim ncurses-devel autoconf automake zlib-devel  python-devel bash-completion telnet kernel-headers kernel-devel libdb-devel redhat-lsb
+	yum -y install gnutls-devel perl gcc make kernel-headers kernel-devel libdb-devel mesa qt redhat-lsb openssl-devel net-tools vim unzip telnet
 }
 #firewalld
 iptables_config(){
@@ -115,12 +116,28 @@ EOF
     echo "sysctl set OK!!"
 }
 
+#记录每次bash命令的执行时间
+history_time(){
+	time="HISTTIMEFORMAT=\"%Y-%m-%d\ %H:%M:%S \""
+	grep "$time" /etc/profile >> /etc/null
+	if [ $? = "0" ];then
+		echo "记录每次bash命令的执行时间已经做过"
+	else
+		line=$(sed -n "/export\ PATH\ USER/=" /etc/profile| tail -n1)
+		sed -i "${line}a HISTTIMEFORMAT=\"%Y-%m-%d\ %H:%M:%S \"\nexport\ HISTTIMEFORMAT" /etc/profile
+		echo "记录每次bash命令的执行时间已经成功"
+	fi	
+	echo "[Success] History Config" >>$BashDir/System_conf.log
+	source /etc/profile
+}
+
 main(){
     yum_config
     iptables_config
     system_config
     ulimit_config
     sysctl_config
+	history_time
 }
 main
 
